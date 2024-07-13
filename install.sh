@@ -96,19 +96,19 @@ function install_bitcoin_core {
     fi
 
     touch .installed
+    echo -e "\033[32;1mBitcoin Core $VERSION_NUM successfully installed!\033[0m"
 
     cd ..
 }
 
-
-if [ ! -e $VERSION_NUM_FULL/.hash_verified ]; then
-    download_bitcoin_core
+if [ -e $VERSION_NUM_FULL/.hash_verified ] &&
+   [ -e $VERSION_NUM_FULL/.sign_verified ] &&
+   [ -e $VERSION_NUM_FULL/.installed ]
+then
+        echo "Bitcoin Core $VERSION_NUM already installed"
+        exit 0
 fi
 
-if [ ! -e $VERSION_NUM_FULL/.sign_verified ]; then
-    verify_bitcoin_core
-fi
-
-if [ ! -e $VERSION_NUM_FULL/.installed ]; then
-    install_bitcoin_core
-fi
+if [ ! -e $VERSION_NUM_FULL/.hash_verified ]; then download_bitcoin_core; fi
+if [ ! -e $VERSION_NUM_FULL/.sign_verified ]; then verify_bitcoin_core; fi
+if [ ! -e $VERSION_NUM_FULL/.installed ]; then install_bitcoin_core; fi
