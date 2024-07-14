@@ -4,6 +4,25 @@
 # file LICENSE or https://opensource.org/license/mit.
 
 
+PLATFORM_ARCH=$(uname -m)
+if [ $(uname) == "Darwin" ]; then
+    PLATFORM_NAME="apple-darwin"
+elif [ $(uname) == "Linux" ]; then
+    PLATFORM_NAME="linux-gnu"
+else
+    echo "Running script on unsupported platform, exiting"
+    exit 1
+fi
+
+CMD_DEPENDENCIES="git gpg curl"
+for cmd in $CMD_DEPENDENCIES
+do
+    if [ $(which $cmd >/dev/null; echo $?) != 0 ]; then
+        echo -e "Command not found on path: \033[31;1m$cmd\033[0m, please install or add to path"
+        exit 1
+    fi
+done
+
 BITCOIN_CORE_URL="https://bitcoincore.org"
 BIN_URL="$BITCOIN_CORE_URL/bin"
 DOWNLOAD_URL="$BITCOIN_CORE_URL/en/download/"
@@ -14,15 +33,6 @@ KEYS_REPO="guix.sigs"
 KEYS_REPO_URL="https://github.com/bitcoin-core/$KEYS_REPO"
 KEYS_DIR="$KEYS_REPO/builder-keys"
 
-PLATFORM_ARCH=$(uname -m)
-if [ $(uname) == "Darwin" ]; then
-    PLATFORM_NAME="apple-darwin"
-elif [ $(uname) == "Linux" ]; then
-    PLATFORM_NAME="linux-gnu"
-else
-    echo -e "\033[31;1mInstallation aborted: running script on unsupported platform\033[0m"
-    exit 1
-fi
 
 function download_bitcoin_core {
     file_download_url="$BIN_URL/$VERSION_NUM_FULL/bitcoin-$VERSION_NUM-$PLATFORM_ARCH-$PLATFORM_NAME.tar.gz"
