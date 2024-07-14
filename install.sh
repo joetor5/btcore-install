@@ -14,8 +14,6 @@ KEYS_REPO="guix.sigs"
 KEYS_REPO_URL="https://github.com/bitcoin-core/$KEYS_REPO"
 KEYS_DIR="$KEYS_REPO/builder-keys"
 
-LOG_FILE="$(pwd)/log"
-
 PLATFORM_ARCH=$(uname -m)
 if [ $(uname) == "Darwin" ]; then
     PLATFORM_NAME="apple-darwin"
@@ -66,7 +64,14 @@ function verify_bitcoin_core {
     fi
 
     touch .hash_verified
-    gpg --verify SHA256SUMS.asc 2> >(grep "Good signature")
+
+    good_sign_str="Good signature"
+    good_sign_out=$(gpg --verify SHA256SUMS.asc 2> >(grep "$good_sign_str"))
+    if [[ ! $good_sign_out == *"$good_sign_str"* ]]; then
+        echo -e "\033[31;1mInstallation aborted: no good gpg signatures found\033[0m"
+        exit 1
+    fi
+    echo "$good_sign_out"
     echo
     while true; do
         read -p "The above good signatures were found. Do you trust some of these? [y/n]: " answer
