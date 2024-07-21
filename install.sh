@@ -7,14 +7,22 @@
 PLATFORM_ARCH=$(uname -m)
 if [ $(uname) == "Darwin" ]; then
     PLATFORM_NAME="apple-darwin"
+    BITCOIN_DIR=$HOME'/Library/Application Support/Bitcoin'
 elif [ $(uname) == "Linux" ]; then
     PLATFORM_NAME="linux-gnu"
+    BITCOIN_DIR="$HOME/.bitcoin"
 else
     echo "Running script on unsupported platform, exiting"
     exit 1
 fi
 
-CMD_DEPENDENCIES="git gpg curl"
+if [[ $SHELL == *"bash"* ]]; then
+    SHRC="$HOME/.bashrc"
+elif [[ $SHELL == *"zsh"* ]]; then
+    SHRC="$HOME/.zshrc"
+fi
+
+CMD_DEPENDENCIES="git gpg curl openssl"
 for cmd in $CMD_DEPENDENCIES
 do
     if [ $(which $cmd >/dev/null; echo $?) != 0 ]; then
@@ -23,6 +31,7 @@ do
     fi
 done
 
+BITCOIN_CONFIG="$BITCOIN_DIR/bitcoin.conf"
 BITCOIN_CORE_URL="https://bitcoincore.org"
 BIN_URL="$BITCOIN_CORE_URL/bin"
 DOWNLOAD_URL="$BITCOIN_CORE_URL/en/download/"
@@ -110,10 +119,52 @@ function install_bitcoin_core {
         sudo cp bitcoin-$VERSION_NUM/bin/bitcoin* /usr/local/bin/.
     fi
 
-    touch .installed
-    echo -e "\033[32;1mBitcoin Core $VERSION_NUM successfully installed!\033[0m"
+    if [ $? == 0 ]; then
+        echo -e "\033[32;1mBitcoin Core $VERSION_NUM successfully installed!\033[0m"
+        touch .installed
+    else
+        echo -e "\033[31;1mInstallation aborted: error while installing\033[0m"
+        exit 1
+    fi
 
     cd ..
+}
+
+function init_bitcoin_core_config {
+
+    if [ ! -d "$BITCOIN_DIR" ]; then
+        mkdir "$BITCOIN_DIR"
+    fi
+
+    if [ ! -e "$BITCOIN_CONFIG" ]; then
+        echo -e "\033[1m==> Initializing Bitcoin Core config at $BITCOIN_CONFIG\033[0m"
+        echo "prune=2048" > "$BITCOIN_CONFIG"
+        echo "server=1" >> "$BITCOIN_CONFIG"
+        echo "rpcuser=$(whoami)" >> "$BITCOIN_CONFIG"
+        echo "rpcpassword=$(openssl rand -base64 12)" >> "$BITCOIN_CONFIG"
+    fi
+
+    if [ $? == 0 ]; then
+        echo -e "\033[1m==> Configuring ENV vars at $SHRC\033[0m"
+        if [ -z "$BITCOIN_RPC_USER" ]; then
+            echo 'export BITCOIN_RPC_USER=$(grep rpcuser "'"$BITCOIN_CONFIG"'" | cut -d "=" -f 2)' >> $SHRC
+        fi
+        if [ -z "$BITCOIN_RPC_PASSWORD" ]; then
+            echo 'export BITCOIN_RPC_PASSWORD=$(grep rpcpassword "'"$BITCOIN_CONFIG"'" | cut -d "=" -f 2)' >> $SHRC
+        fi
+    fi
+
+     crontab -l | grep "@reboot bitcoind -daemon" > /dev/null
+     if [ $? != 0 ]; then
+        echo -e "\033[1m==> Configuring crontab to start bitcoind at boot\033[0m"
+        crontab -l > crontab_tmp
+        echo "@reboot bitcoind -daemon" >> crontab_tmp
+        crontab crontab_tmp
+        rm crontab_tmp
+     fi
+
+     touch .config_init
+
 }
 
 if [ -e $VERSION_NUM_FULL/.hash_verified ] &&
@@ -127,3 +178,4 @@ fi
 if [ ! -e $VERSION_NUM_FULL/.hash_verified ]; then download_bitcoin_core; fi
 if [ ! -e $VERSION_NUM_FULL/.sign_verified ]; then verify_bitcoin_core; fi
 if [ ! -e $VERSION_NUM_FULL/.installed ]; then install_bitcoin_core; fi
+if [ ! -e .config_init ]; then init_bitcoin_core_config; fi

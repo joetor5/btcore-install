@@ -1,4 +1,4 @@
 bitcoin-*
 SHA256SUMS*
 guix.sigs
-log
+.config_init
