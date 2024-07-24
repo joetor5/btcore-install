@@ -141,7 +141,7 @@ function init_bitcoin_core_config {
         echo "prune=2048" > "$BITCOIN_CONFIG"
         echo "server=1" >> "$BITCOIN_CONFIG"
         echo "rpcuser=$(whoami)" >> "$BITCOIN_CONFIG"
-        echo "rpcpassword=$(openssl rand -base64 12)" >> "$BITCOIN_CONFIG"
+        echo "rpcpassword=$(openssl rand -base64 32)" >> "$BITCOIN_CONFIG"
     fi
 
     if [ $? == 0 ]; then
