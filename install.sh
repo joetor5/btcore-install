@@ -110,6 +110,12 @@ function install_bitcoin_core {
     cd $VERSION_NUM_FULL
     tar xzf *.tar.gz
 
+    if [ $(bitcoin-cli uptime >/dev/null; echo $?) == 0 ]; then
+        echo -e "\033[1m==> Stopping bitcoind before installing\033[0m"
+        bitcoin-cli stop
+        sleep 5
+    fi
+
     if [ $PLATFORM_NAME == "linux-gnu" ]; then
         sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION_NUM/bin/*
     elif [ $PLATFORM_NAME == "apple-darwin" ]; then
