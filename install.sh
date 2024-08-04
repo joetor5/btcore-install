@@ -25,7 +25,7 @@ fi
 CMD_DEPENDENCIES="git gpg curl openssl"
 for cmd in $CMD_DEPENDENCIES
 do
-    if [ $(which $cmd >/dev/null; echo $?) != 0 ]; then
+    if [ $(which $cmd >/dev/null 2>&1; echo $?) != 0 ]; then
         echo -e "Command not found on path: \033[31;1m$cmd\033[0m, please install or add to path"
         exit 1
     fi
@@ -110,7 +110,7 @@ function install_bitcoin_core {
     cd $VERSION_NUM_FULL
     tar xzf *.tar.gz
 
-    if [ $(bitcoin-cli uptime >/dev/null; echo $?) == 0 ]; then
+    if [ $(bitcoin-cli uptime >/dev/null 2>&1; echo $?) == 0 ]; then
         echo -e "\033[1m==> Stopping bitcoind before installing\033[0m"
         bitcoin-cli stop
         sleep 5
@@ -160,8 +160,7 @@ function init_bitcoin_core_config {
         fi
     fi
 
-     crontab -l | grep "@reboot bitcoind -daemon" > /dev/null
-     if [ $? != 0 ]; then
+     if [ $(crontab -l | grep "@reboot bitcoind -daemon" >/dev/null 2>&1; echo $?) != 0 ]; then
         echo -e "\033[1m==> Configuring crontab to start bitcoind at boot\033[0m"
         crontab -l > crontab_tmp
         echo "@reboot bitcoind -daemon" >> crontab_tmp
