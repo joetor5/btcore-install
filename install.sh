@@ -43,7 +43,7 @@ KEYS_REPO_URL="https://github.com/bitcoin-core/$KEYS_REPO"
 KEYS_DIR="$KEYS_REPO/builder-keys"
 
 
-function download_bitcoin_core {
+download_bitcoin_core () {
     file_download_url="$BIN_URL/$VERSION_NUM_FULL/bitcoin-$VERSION_NUM-$PLATFORM_ARCH-$PLATFORM_NAME.tar.gz"
     bin_hash_url="$BIN_URL/$VERSION_NUM_FULL/SHA256SUMS"
     hash_sign_url="$bin_hash_url.asc"
@@ -60,7 +60,7 @@ function download_bitcoin_core {
 
 }
 
-function verify_bitcoin_core {
+verify_bitcoin_core () {
 
     if [ ! -d $KEYS_REPO ]; then
         echo -e "\033[1m==> Downloading builder-keys ($KEYS_REPO_URL)\033[0m"
@@ -105,7 +105,7 @@ function verify_bitcoin_core {
     cd ..
 }
 
-function install_bitcoin_core {
+install_bitcoin_core () {
     echo -e "\033[1m==> Installing $VERSION_NUM_FULL\033[0m"
     cd $VERSION_NUM_FULL
     tar xzf *.tar.gz
@@ -136,7 +136,7 @@ function install_bitcoin_core {
     cd ..
 }
 
-function init_bitcoin_core_config {
+init_bitcoin_core_config () {
 
     if [ ! -d "$BITCOIN_DIR" ]; then
         mkdir "$BITCOIN_DIR"
