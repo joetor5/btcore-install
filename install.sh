@@ -145,6 +145,7 @@ init_bitcoin_core_config () {
     if [ ! -e "$BITCOIN_CONFIG" ]; then
         echo -e "\033[1m==> Initializing Bitcoin Core config at $BITCOIN_CONFIG\033[0m"
         echo "prune=2048" > "$BITCOIN_CONFIG"
+        echo "maxconnections=50" >> "$BITCOIN_CONFIG"
         echo "server=1" >> "$BITCOIN_CONFIG"
         echo "rpcuser=$(whoami)" >> "$BITCOIN_CONFIG"
         echo "rpcpassword=$(openssl rand -base64 32 | tr = x)" >> "$BITCOIN_CONFIG"
