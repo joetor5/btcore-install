@@ -43,6 +43,19 @@ KEYS_REPO_URL="https://github.com/bitcoin-core/$KEYS_REPO"
 KEYS_DIR="$KEYS_REPO/builder-keys"
 
 
+is_bitcoin_core_running() {
+
+    echo $(bitcoin-cli uptime >/dev/null 2>&1; echo $?)
+
+}
+
+start_bitcoin_core() {
+
+    echo -e "\033[1m==> Starting bitcoind\033[0m"
+    bitcoind -daemon
+
+}
+
 download_bitcoin_core () {
     file_download_url="$BIN_URL/$VERSION_NUM_FULL/bitcoin-$VERSION_NUM-$PLATFORM_ARCH-$PLATFORM_NAME.tar.gz"
     bin_hash_url="$BIN_URL/$VERSION_NUM_FULL/SHA256SUMS"
@@ -110,7 +123,7 @@ install_bitcoin_core () {
     cd $VERSION_NUM_FULL
     tar xzf *.tar.gz
 
-    if [ $(bitcoin-cli uptime >/dev/null 2>&1; echo $?) == 0 ]; then
+    if [ $(is_bitcoin_core_running) == 0 ]; then
         echo -e "\033[1m==> Stopping bitcoind before installing\033[0m"
         bitcoin-cli stop
         sleep 5
@@ -173,6 +186,7 @@ init_bitcoin_core_config () {
 
 }
 
+
 if [ -e $VERSION_NUM_FULL/.hash_verified ] &&
    [ -e $VERSION_NUM_FULL/.sign_verified ] &&
    [ -e $VERSION_NUM_FULL/.installed ]
@@ -185,3 +199,4 @@ if [ ! -e $VERSION_NUM_FULL/.hash_verified ]; then download_bitcoin_core; fi
 if [ ! -e $VERSION_NUM_FULL/.sign_verified ]; then verify_bitcoin_core; fi
 if [ ! -e $VERSION_NUM_FULL/.installed ]; then install_bitcoin_core; fi
 if [ ! -e .config_init ]; then init_bitcoin_core_config; fi
+if [ ! $(is_bitcoin_core_running) == 0 ]; then start_bitcoin_core; fi
