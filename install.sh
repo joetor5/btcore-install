@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2024 Joel Torres
+# Copyright (c) 2024-2025 Joel Torres
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or https://opensource.org/license/mit.
 
