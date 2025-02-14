@@ -42,6 +42,17 @@ KEYS_REPO="guix.sigs"
 KEYS_REPO_URL="https://github.com/bitcoin-core/$KEYS_REPO"
 KEYS_DIR="$KEYS_REPO/builder-keys"
 
+fprint_i() {
+    echo -e "\033[1m==> $1\033[0m"
+}
+
+fprint_e() {
+    echo -e "\033[31;1m$1\033[0m"
+}
+
+fprint_s() {
+    echo -e "\033[32;1m$1\033[0m"
+}
 
 is_bitcoin_core_running() {
 
@@ -51,7 +62,7 @@ is_bitcoin_core_running() {
 
 start_bitcoin_core() {
 
-    echo -e "\033[1m==> Starting bitcoind\033[0m"
+    fprint_i "Starting bitcoind"
     bitcoind -daemon
 
 }
@@ -67,7 +78,7 @@ download_bitcoin_core () {
 
     for url in $file_download_url $bin_hash_url $hash_sign_url
     do
-        echo -e "\033[1m==> Downloading $url\033[0m"
+        fprint_i "Downloading $url"
         curl -O --output-dir $VERSION_NUM_FULL $url
     done
 
@@ -76,22 +87,22 @@ download_bitcoin_core () {
 verify_bitcoin_core () {
 
     if [ ! -d $KEYS_REPO ]; then
-        echo -e "\033[1m==> Downloading builder-keys ($KEYS_REPO_URL)\033[0m"
+        fprint_i "Downloading builder-keys ($KEYS_REPO_URL)"
         git clone $KEYS_REPO_URL
     else
-        echo -e "\033[1m==> Updating builder-keys\033[0m"
+        fprint_i "Updating builder-keys"
         git -C $KEYS_REPO pull
     fi
     
-    echo -e "\033[1m==> Importing and refreshing keys\033[0m"
+    fprint_i "Importing and refreshing keys"
     gpg --import $KEYS_DIR/*
     gpg --keyserver hkps://keys.openpgp.org --refresh-keys
 
-    echo -e "\033[1m==> Verifying hashes and signatures\033[0m"
+    fprint_i "Verifying hashes and signatures"
     cd $VERSION_NUM_FULL
     shasum -a 256 --ignore-missing --check SHA256SUMS
     if [ $? != 0 ]; then
-        echo -e "\033[31;1mInstallation aborted: failure on computing hashes\033[0m"
+        fprint_e "Installation aborted: failure on computing hashes"
         exit 1
     fi
 
@@ -100,7 +111,7 @@ verify_bitcoin_core () {
     good_sign_str="Good signature"
     good_sign_out=$(gpg --verify SHA256SUMS.asc 2> >(grep "$good_sign_str"))
     if [[ ! $good_sign_out == *"$good_sign_str"* ]]; then
-        echo -e "\033[31;1mInstallation aborted: no good gpg signatures found\033[0m"
+        fprint_e "Installation aborted: no good gpg signatures found"
         exit 1
     fi
     echo "$good_sign_out"
@@ -111,7 +122,7 @@ verify_bitcoin_core () {
             Y|y)
                 touch .sign_verified; break;;
             N|n)
-                echo -e "\033[31;1mInstallation aborted: keys not trusted\033[0m"; exit 1;;
+                fprint_e "Installation aborted: keys not trusted"; exit 1;;
         esac
     done
 
@@ -119,12 +130,12 @@ verify_bitcoin_core () {
 }
 
 install_bitcoin_core () {
-    echo -e "\033[1m==> Installing $VERSION_NUM_FULL\033[0m"
+    fprint_i "Installing $VERSION_NUM_FULL"
     cd $VERSION_NUM_FULL
     tar xzf *.tar.gz
 
     if [ $(is_bitcoin_core_running) == 0 ]; then
-        echo -e "\033[1m==> Stopping bitcoind before installing\033[0m"
+        fprint_i "Stopping bitcoind before installing"
         bitcoin-cli stop
         sleep 5
     fi
@@ -139,10 +150,10 @@ install_bitcoin_core () {
     fi
 
     if [ $? == 0 ]; then
-        echo -e "\033[32;1mBitcoin Core $VERSION_NUM successfully installed!\033[0m"
+        fprint_s "Bitcoin Core $VERSION_NUM successfully installed!"
         touch .installed
     else
-        echo -e "\033[31;1mInstallation aborted: error while installing\033[0m"
+        fprint_e "Installation aborted: error while installing"
         exit 1
     fi
 
@@ -156,7 +167,7 @@ init_bitcoin_core_config () {
     fi
 
     if [ ! -e "$BITCOIN_CONFIG" ]; then
-        echo -e "\033[1m==> Initializing Bitcoin Core config at $BITCOIN_CONFIG\033[0m"
+        fprint_i "Initializing Bitcoin Core config at $BITCOIN_CONFIG"
         echo "prune=2048" > "$BITCOIN_CONFIG"
         echo "maxconnections=50" >> "$BITCOIN_CONFIG"
         echo "server=1" >> "$BITCOIN_CONFIG"
@@ -165,7 +176,7 @@ init_bitcoin_core_config () {
     fi
 
     if [ $? == 0 ]; then
-        echo -e "\033[1m==> Configuring ENV vars at $SHRC\033[0m"
+        fprint_i "Configuring ENV vars at $SHRC"
         if [ -z "$BITCOIN_RPC_USER" ]; then
             echo 'export BITCOIN_RPC_USER=$(grep rpcuser "'"$BITCOIN_CONFIG"'" | cut -d "=" -f 2)' >> $SHRC
         fi
@@ -175,7 +186,7 @@ init_bitcoin_core_config () {
     fi
 
      if [ $(crontab -l | grep "@reboot bitcoind -daemon" >/dev/null 2>&1; echo $?) != 0 ]; then
-        echo -e "\033[1m==> Configuring crontab to start bitcoind at boot\033[0m"
+        fprint_i "Configuring crontab to start bitcoind at boot"
         crontab -l > crontab_tmp
         echo "@reboot bitcoind -daemon" >> crontab_tmp
         crontab crontab_tmp
