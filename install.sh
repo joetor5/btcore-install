@@ -146,7 +146,7 @@ install_bitcoin_core () {
         if [ ! -d /usr/local/bin ]; then
             sudo mkdir -p /usr/local/bin
         fi
-        sudo cp bitcoin-$VERSION_NUM/bin/bitcoin* /usr/local/bin/.
+        sudo cp -v bitcoin-$VERSION_NUM/bin/bitcoin* /usr/local/bin/.
     fi
 
     if [ $? == 0 ]; then
