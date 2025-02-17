@@ -144,7 +144,7 @@ install_bitcoin_core () {
     fi
 
     if [ $PLATFORM_NAME == "linux-gnu" ]; then
-        sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION_NUM/bin/*
+        sudo install -v -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION_NUM/bin/*
     elif [ $PLATFORM_NAME == "apple-darwin" ]; then
         if [ ! -d /usr/local/bin ]; then
             sudo mkdir -p /usr/local/bin
