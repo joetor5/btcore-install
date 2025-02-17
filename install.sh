@@ -3,6 +3,17 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or https://opensource.org/license/mit.
 
+fprint_i() {
+    echo -e "\033[1m==> $1\033[0m"
+}
+
+fprint_e() {
+    echo -e "\033[31;1m$1\033[0m"
+}
+
+fprint_s() {
+    echo -e "\033[32;1m$1\033[0m"
+}
 
 PLATFORM_ARCH=$(uname -m)
 if [ $(uname) == "Darwin" ]; then
@@ -12,7 +23,7 @@ elif [ $(uname) == "Linux" ]; then
     PLATFORM_NAME="linux-gnu"
     BITCOIN_DIR="$HOME/.bitcoin"
 else
-    echo "Running script on unsupported platform, exiting"
+    fprint_e "Running script on unsupported platform, exiting"
     exit 1
 fi
 
@@ -26,7 +37,7 @@ CMD_DEPENDENCIES="git gpg curl openssl"
 for cmd in $CMD_DEPENDENCIES
 do
     if [ $(which $cmd >/dev/null 2>&1; echo $?) != 0 ]; then
-        echo -e "Command not found on path: \033[31;1m$cmd\033[0m, please install or add to path"
+        fprint_e "Command not found on path: $cmd, please install or add to path"
         exit 1
     fi
 done
@@ -35,36 +46,28 @@ BITCOIN_CONFIG="$BITCOIN_DIR/bitcoin.conf"
 BITCOIN_CORE_URL="https://bitcoincore.org"
 BIN_URL="$BITCOIN_CORE_URL/bin"
 DOWNLOAD_URL="$BITCOIN_CORE_URL/en/download/"
-VERSION_NUM=$(curl -s $DOWNLOAD_URL | grep "Latest version" | sed 's/.*Latest version: \([0-9]*\.[0-9]*\).*/\1/')
+if [ -n "$1" ]; then
+    VERSION_NUM=$1
+    if [[ ! $VERSION_NUM =~ ^[0-9]{1,3}.[0-9]{1,3}$ ]]; then
+        fprint_e "Error: invalid version number"
+        exit 1
+    fi
+else
+    VERSION_NUM=$(curl -s $DOWNLOAD_URL | grep "Latest version" | sed 's/.*Latest version: \([0-9]*\.[0-9]*\).*/\1/')
+fi
 VERSION_NUM_FULL="bitcoin-core-$VERSION_NUM"
 
 KEYS_REPO="guix.sigs"
 KEYS_REPO_URL="https://github.com/bitcoin-core/$KEYS_REPO"
 KEYS_DIR="$KEYS_REPO/builder-keys"
 
-fprint_i() {
-    echo -e "\033[1m==> $1\033[0m"
-}
-
-fprint_e() {
-    echo -e "\033[31;1m$1\033[0m"
-}
-
-fprint_s() {
-    echo -e "\033[32;1m$1\033[0m"
-}
-
 is_bitcoin_core_running() {
-
     echo $(bitcoin-cli uptime >/dev/null 2>&1; echo $?)
-
 }
 
 start_bitcoin_core() {
-
     fprint_i "Starting bitcoind"
     bitcoind -daemon
-
 }
 
 download_bitcoin_core () {
