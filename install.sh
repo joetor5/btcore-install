@@ -161,6 +161,7 @@ install_bitcoin_core () {
     fi
 
     cd ..
+    echo $VERSION_NUM > .version
 }
 
 init_bitcoin_core_config () {
@@ -200,6 +201,9 @@ init_bitcoin_core_config () {
 
 }
 
+if [ -e .version ] && [ $(cat .version) != $VERSION_NUM ] && [ -d $VERSION_NUM_FULL ]; then
+    rm $VERSION_NUM_FULL/.installed
+fi
 
 if [ -e $VERSION_NUM_FULL/.hash_verified ] &&
    [ -e $VERSION_NUM_FULL/.sign_verified ] &&

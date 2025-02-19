@@ -2,3 +2,4 @@ bitcoin-*
 SHA256SUMS*
 guix.sigs
 .config_init
+.version
