@@ -62,7 +62,7 @@ KEYS_REPO_URL="https://github.com/bitcoin-core/$KEYS_REPO"
 KEYS_DIR="$KEYS_REPO/builder-keys"
 
 is_bitcoin_core_running() {
-    echo $(bitcoin-cli uptime >/dev/null 2>&1; echo $?)
+    echo $(pgrep bitcoind >/dev/null 2>&1; echo $?)
 }
 
 start_bitcoin_core() {
