@@ -3,6 +3,13 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or https://opensource.org/license/mit.
 
+VERSION=1.0
+
+if [ $1 == "version" ]; then
+    echo "Bitcoin Core Installer v$VERSION"
+    exit 0
+fi
+
 fprint_i() {
     echo -e "\033[1m==> $1\033[0m"
 }
