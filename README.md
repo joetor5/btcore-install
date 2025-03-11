@@ -1,4 +1,4 @@
-# bitcoin-core-install
+# btcore-install
 
 Install script for Bitcoin Core (https://bitcoincore.org/).
 
