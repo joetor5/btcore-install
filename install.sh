@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or https://opensource.org/license/mit.
 
-VERSION=0.1.1-dev.20250321
+VERSION=0.1.1-dev.20250323
 
 if [[ $1 == "version" ]]; then
     echo "Bitcoin Core Installer v$VERSION"
@@ -92,6 +92,17 @@ download_bitcoin_core () {
         curl -O --output-dir $VERSION_NUM_FULL $url
     done
 
+    fprint_i "Verifying sha-256 hash"
+    cd $VERSION_NUM_FULL
+    shasum -a 256 --ignore-missing --check SHA256SUMS
+    if [ $? != 0 ]; then
+        fprint_e "Installation aborted: failure on computing hashes"
+        exit 1
+    fi
+
+    touch .hash_verified
+    cd ..
+
 }
 
 verify_bitcoin_core () {
@@ -108,16 +119,8 @@ verify_bitcoin_core () {
     gpg --import $KEYS_DIR/*
     gpg --keyserver hkps://keys.openpgp.org --refresh-keys
 
-    fprint_i "Verifying hashes and signatures"
+    fprint_i "Verifying gpg signatures"
     cd $VERSION_NUM_FULL
-    shasum -a 256 --ignore-missing --check SHA256SUMS
-    if [ $? != 0 ]; then
-        fprint_e "Installation aborted: failure on computing hashes"
-        exit 1
-    fi
-
-    touch .hash_verified
-
     good_sign_str="Good signature"
     good_sign_out=$(gpg --verify SHA256SUMS.asc 2> >(grep "$good_sign_str"))
     if [[ ! $good_sign_out == *"$good_sign_str"* ]]; then
