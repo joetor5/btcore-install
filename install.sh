@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or https://opensource.org/license/mit.
 
-VERSION=0.1.1-dev.20250323
+VERSION=0.1.1
 
 if [[ $1 == "version" ]]; then
     echo "Bitcoin Core Installer v$VERSION"
