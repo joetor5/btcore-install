@@ -6,7 +6,7 @@ Works on macOS and GNU/Linux systems.
 
 ## License
 
-Distributed under the MIT License. See the accompanying file [LICENSE](https://github.com/joetor5/btcore-install/blob/main/LICENSE).
+Distributed under the MIT License. See the accompanying file LICENSE.
 
 ## Prerequisites
 
