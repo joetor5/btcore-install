@@ -91,11 +91,11 @@ download_bitcoin_core () {
         curl -O --output-dir $VERSION_NUM_FULL $url
     done
 
-    fprint_i "Verifying sha-256 hash"
+    fprint_i "Verifying sha-256 hash downloaded from $hash_sign_url"
     cd $VERSION_NUM_FULL
     shasum -a 256 --ignore-missing --check SHA256SUMS
     if [ $? != 0 ]; then
-        fprint_e "Installation aborted: failure on computing hashes"
+        fprint_e "Installation aborted: failure on hash verification"
         exit 1
     fi
 
@@ -118,8 +118,26 @@ verify_bitcoin_core () {
     gpg --import $KEYS_DIR/*
     gpg --keyserver hkps://keys.openpgp.org --refresh-keys
 
-    fprint_i "Verifying gpg signatures"
+    sig_dirs=$(ls guix.sigs/$VERSION_NUM)
     cd $VERSION_NUM_FULL
+
+    if [ ! -e .hash_verified_guix ]; then
+        fprint_i "Verifying sha-256 hashes from guix.sigs release attestations"
+        for dir in $sig_dirs
+        do
+            hash_file="../guix.sigs/$VERSION_NUM/$dir/all.SHA256SUMS"
+            fprint_s $hash_file
+            shasum -a 256 --ignore-missing --check $hash_file
+            if [ $? != 0 ]; then
+                fprint_e "Installation aborted: failure on hash verification from guix.sigs release attestations"
+                exit 1
+            fi
+        done
+    fi
+
+    touch .hash_verified_guix
+
+    fprint_i "Verifying gpg signatures"
     good_sign_str="Good signature"
     good_sign_out=$(gpg --verify SHA256SUMS.asc 2> >(grep "$good_sign_str"))
     if [[ ! $good_sign_out == *"$good_sign_str"* ]]; then
@@ -211,7 +229,7 @@ init_bitcoin_core_config () {
 }
 
 if [ -e .version ] && [ $(cat .version) != $VERSION_NUM ] && [ -d $VERSION_NUM_FULL ]; then
-    rm $VERSION_NUM_FULL/.installed
+    rm $VERSION_NUM_FULL/.installed >/dev/null 2>&1
 fi
 
 if [ -e $VERSION_NUM_FULL/.hash_verified ] &&
