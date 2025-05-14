@@ -2,7 +2,7 @@
 # Copyright (c) 2024-2025 Joel Torres
 # Distributed under the MIT License. See the accompanying file LICENSE.
 
-VERSION=0.1.1
+VERSION=0.1.2
 
 if [[ $1 == "version" ]]; then
     echo "Bitcoin Core Installer v$VERSION"
@@ -62,6 +62,8 @@ else
     VERSION_NUM=$(curl -s $DOWNLOAD_URL | grep "Latest version" | sed 's/.*Latest version: \([0-9]*\.[0-9]*\).*/\1/')
 fi
 VERSION_NUM_FULL="bitcoin-core-$VERSION_NUM"
+PGP_SIG_FILE="SHA256SUMS.asc"
+PGP_SIG_FILE_GUIX="all.SHA256SUMS.asc"
 
 KEYS_REPO="guix.sigs"
 KEYS_REPO_URL="https://github.com/bitcoin-core/$KEYS_REPO"
@@ -100,6 +102,7 @@ download_bitcoin_core () {
     fi
 
     touch .hash_verified
+    fprint_s "Bitcoin Core download success"
     cd ..
 
 }
@@ -114,9 +117,12 @@ verify_bitcoin_core () {
         git -C $KEYS_REPO pull
     fi
     
-    fprint_i "Importing and refreshing keys"
-    gpg --import $KEYS_DIR/*
-    gpg --keyserver hkps://keys.openpgp.org --refresh-keys
+    if [ ! -e $VERSION_NUM_FULL/.keys_updated ]; then
+        fprint_i "Importing and refreshing keys"
+        gpg --import $KEYS_DIR/*
+        gpg --keyserver hkps://keys.openpgp.org --refresh-keys
+        touch $VERSION_NUM_FULL/.keys_updated
+    fi
 
     sig_dirs=$(ls guix.sigs/$VERSION_NUM)
     cd $VERSION_NUM_FULL
@@ -133,34 +139,49 @@ verify_bitcoin_core () {
                 exit 1
             fi
         done
+
+        touch .hash_verified_guix
     fi
 
-    touch .hash_verified_guix
+    if [ ! -e .sign_file_verified ]; then
+        fprint_i "Verifying (sha256) that the gpg signatures from guix.sigs matches the downloaded signatures"
+        cat ../guix.sigs/$VERSION_NUM/*/$PGP_SIG_FILE_GUIX | grep -Fxf - $PGP_SIG_FILE > $PGP_SIG_FILE_GUIX
+        hash_sigs_guix=$(shasum -a 256 $PGP_SIG_FILE_GUIX | cut -d " " -f 1)
+        hash_sigs_downloaded=$(shasum -a 256 $PGP_SIG_FILE | cut -d " " -f 1)
+        if [ $hash_sigs_guix != $hash_sigs_downloaded ]; then
+            fprint_e "Installation aborted: hash mismatch"
+            fprint_e "guix.sigs: $hash_sigs_guix"
+            fprint_e "downloaded: $hash_sigs_downloaded"
+            exit 1
+        fi
 
-    fprint_i "Verifying gpg signatures"
-    good_sign_str="Good signature"
-    good_sign_out=$(gpg --verify SHA256SUMS.asc 2> >(grep "$good_sign_str"))
+        touch .sign_file_verified
+    fi
+
+    sign_count=$(grep -c "BEGIN PGP SIGNATURE" $PGP_SIG_FILE)
+    fprint_i "Verifying gpg signatures ($sign_count)"
+    good_sign_str="Good signature from"
+    good_sign_out=$(gpg --verify $PGP_SIG_FILE 2> >(grep "$good_sign_str"))
+    sign_count_result=$(echo "$good_sign_out" | grep -c "$good_sign_str")
+    echo "$good_sign_out"
+
     if [[ ! $good_sign_out == *"$good_sign_str"* ]]; then
         fprint_e "Installation aborted: no good gpg signatures found"
         exit 1
     fi
-    echo "$good_sign_out"
-    echo
-    while true; do
-        read -p "The above good signatures were found. Do you trust some of these? [y/n]: " answer
-        case $answer in
-            Y|y)
-                touch .sign_verified; break;;
-            N|n)
-                fprint_e "Installation aborted: keys not trusted"; exit 1;;
-        esac
-    done
 
+    if [[ "$sign_count" != "$sign_count_result" ]]; then
+        fprint_e "Installation aborted: mismatched good signature count: got $sign_count_result instead of $sign_count"
+        exit 1
+    fi
+
+    touch .sign_verified
+    fprint_s "Bitcoin Core verification success"
     cd ..
 }
 
 install_bitcoin_core () {
-    fprint_i "Installing $VERSION_NUM_FULL"
+    fprint_i "Installing $VERSION_NUM_FULL (you may be prompted for sudo password)"
     cd $VERSION_NUM_FULL
     tar xzf *.tar.gz
 
@@ -217,7 +238,7 @@ init_bitcoin_core_config () {
     fi
 
      if [ $(crontab -l | grep "@reboot bitcoind -daemon" >/dev/null 2>&1; echo $?) != 0 ]; then
-        fprint_i "Configuring crontab to start bitcoind at boot"
+        fprint_i "Configuring crontab to start bitcoind at boot (you may be prompted for password)"
         crontab -l > crontab_tmp
         echo "@reboot bitcoind -daemon" >> crontab_tmp
         crontab crontab_tmp
@@ -225,6 +246,7 @@ init_bitcoin_core_config () {
      fi
 
      touch .config_init
+     fprint_s "Bitcoin Core configuration init success"
 
 }
 
