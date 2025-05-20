@@ -4,17 +4,12 @@ Install script for Bitcoin Core (https://bitcoincore.org/).
 
 Works on macOS and GNU/Linux systems.
 
-## License
-
-Distributed under the MIT License. See the accompanying file LICENSE.
-
 ## Prerequisites
 
 * Git
 * cURL
 * GnuPG
 * OpenSSL
-
 
 ## Usage
 
@@ -30,3 +25,7 @@ The latest Bitcoin Core version will get installed by default. Optionally, a ver
 ```
 ./install.sh 28.1
 ```
+
+## License
+
+Distributed under the MIT License. See the accompanying file LICENSE.
