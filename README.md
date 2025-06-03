@@ -14,8 +14,8 @@ Works on macOS and GNU/Linux systems.
 ## Usage
 
 ```
-git clone https://github.com/joetor5/bitcoin-core-install.git
-cd bitcoin-core-install
+git clone https://github.com/joetor5/btcore-install.git
+cd btcore-install
 chmod +x install.sh
 ./install.sh
 ```
