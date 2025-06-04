@@ -2,7 +2,7 @@
 # Copyright (c) 2024-2025 Joel Torres
 # Distributed under the MIT License. See the accompanying file LICENSE.
 
-VERSION=0.1.2
+VERSION=0.2.0
 
 if [[ $1 == "version" ]]; then
     echo "Bitcoin Core Installer v$VERSION"
@@ -256,7 +256,7 @@ fi
 
 if [[ -e $VERSION_NUM_FULL/.hash_verified ]] &&
    [[ -e $VERSION_NUM_FULL/.sign_verified ]] &&
-   [[ -e $VERSION_NUM_FULL/.installed ]
+   [[ -e $VERSION_NUM_FULL/.installed ]]
 then
         echo "Bitcoin Core $VERSION_NUM already installed"
         exit 0
