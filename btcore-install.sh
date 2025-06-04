@@ -22,10 +22,10 @@ fprint_s() {
 }
 
 PLATFORM_ARCH=$(uname -m)
-if [ $(uname) == "Darwin" ]; then
+if [[ $(uname) == "Darwin" ]]; then
     PLATFORM_NAME="apple-darwin"
     BITCOIN_DIR=$HOME'/Library/Application Support/Bitcoin'
-elif [ $(uname) == "Linux" ]; then
+elif [[ $(uname) == "Linux" ]]; then
     PLATFORM_NAME="linux-gnu"
     BITCOIN_DIR="$HOME/.bitcoin"
 else
@@ -42,7 +42,7 @@ fi
 CMD_DEPENDENCIES="git gpg curl openssl"
 for cmd in $CMD_DEPENDENCIES
 do
-    if [ $(which $cmd >/dev/null 2>&1; echo $?) != 0 ]; then
+    if [[ $(which $cmd >/dev/null 2>&1; echo $?) != 0 ]]; then
         fprint_e "Command not found on path: $cmd, please install or add to path"
         exit 1
     fi
@@ -52,7 +52,7 @@ BITCOIN_CONFIG="$BITCOIN_DIR/bitcoin.conf"
 BITCOIN_CORE_URL="https://bitcoincore.org"
 BIN_URL="$BITCOIN_CORE_URL/bin"
 DOWNLOAD_URL="$BITCOIN_CORE_URL/en/download/"
-if [ -n "$1" ]; then
+if [[ -n "$1" ]]; then
     VERSION_NUM=$1
     if [[ ! $VERSION_NUM =~ ^[0-9]{1,3}.[0-9]{1,3}$ ]]; then
         fprint_e "Error: invalid version number"
@@ -83,7 +83,7 @@ download_bitcoin_core () {
     bin_hash_url="$BIN_URL/$VERSION_NUM_FULL/SHA256SUMS"
     hash_sign_url="$bin_hash_url.asc"
     
-    if [ ! -d $VERSION_NUM_FULL ]; then
+    if [[ ! -d $VERSION_NUM_FULL ]]; then
         mkdir $VERSION_NUM_FULL
     fi
 
@@ -96,7 +96,7 @@ download_bitcoin_core () {
     fprint_i "Verifying sha-256 hash downloaded from $hash_sign_url"
     cd $VERSION_NUM_FULL
     shasum -a 256 --ignore-missing --check SHA256SUMS
-    if [ $? != 0 ]; then
+    if [[ $? != 0 ]]; then
         fprint_e "Installation aborted: failure on hash verification"
         exit 1
     fi
@@ -109,7 +109,7 @@ download_bitcoin_core () {
 
 verify_bitcoin_core () {
 
-    if [ ! -d $KEYS_REPO ]; then
+    if [[ ! -d $KEYS_REPO ]]; then
         fprint_i "Downloading builder-keys ($KEYS_REPO_URL)"
         git clone $KEYS_REPO_URL
     else
@@ -117,7 +117,7 @@ verify_bitcoin_core () {
         git -C $KEYS_REPO pull
     fi
     
-    if [ ! -e $VERSION_NUM_FULL/.keys_updated ]; then
+    if [[ ! -e $VERSION_NUM_FULL/.keys_updated ]]; then
         fprint_i "Importing and refreshing keys"
         gpg --import $KEYS_DIR/*
         gpg --keyserver hkps://keys.openpgp.org --refresh-keys
@@ -127,14 +127,14 @@ verify_bitcoin_core () {
     sig_dirs=$(ls guix.sigs/$VERSION_NUM)
     cd $VERSION_NUM_FULL
 
-    if [ ! -e .hash_verified_guix ]; then
+    if [[ ! -e .hash_verified_guix ]]; then
         fprint_i "Verifying sha-256 hashes from guix.sigs release attestations"
         for dir in $sig_dirs
         do
             hash_file="../guix.sigs/$VERSION_NUM/$dir/all.SHA256SUMS"
             fprint_s $hash_file
             shasum -a 256 --ignore-missing --check $hash_file
-            if [ $? != 0 ]; then
+            if [[ $? != 0 ]]; then
                 fprint_e "Installation aborted: failure on hash verification from guix.sigs release attestations"
                 exit 1
             fi
@@ -143,12 +143,12 @@ verify_bitcoin_core () {
         touch .hash_verified_guix
     fi
 
-    if [ ! -e .sign_file_verified ]; then
+    if [[ ! -e .sign_file_verified ]]; then
         fprint_i "Verifying (sha256) that the gpg signatures from guix.sigs matches the downloaded signatures"
         cat ../guix.sigs/$VERSION_NUM/*/$PGP_SIG_FILE_GUIX | grep -Fxf - $PGP_SIG_FILE > $PGP_SIG_FILE_GUIX
         hash_sigs_guix=$(shasum -a 256 $PGP_SIG_FILE_GUIX | cut -d " " -f 1)
         hash_sigs_downloaded=$(shasum -a 256 $PGP_SIG_FILE | cut -d " " -f 1)
-        if [ $hash_sigs_guix != $hash_sigs_downloaded ]; then
+        if [[ $hash_sigs_guix != $hash_sigs_downloaded ]]; then
             fprint_e "Installation aborted: hash mismatch"
             fprint_e "guix.sigs: $hash_sigs_guix"
             fprint_e "downloaded: $hash_sigs_downloaded"
@@ -185,22 +185,22 @@ install_bitcoin_core () {
     cd $VERSION_NUM_FULL
     tar xzf *.tar.gz
 
-    if [ $(is_bitcoin_core_running) == 0 ]; then
+    if [[ $(is_bitcoin_core_running) == 0 ]]; then
         fprint_i "Stopping bitcoind before installing"
         bitcoin-cli stop
         sleep 5
     fi
 
-    if [ $PLATFORM_NAME == "linux-gnu" ]; then
+    if [[ $PLATFORM_NAME == "linux-gnu" ]]; then
         sudo install -v -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION_NUM/bin/*
-    elif [ $PLATFORM_NAME == "apple-darwin" ]; then
-        if [ ! -d /usr/local/bin ]; then
+    elif [[ $PLATFORM_NAME == "apple-darwin" ]]; then
+        if [[ ! -d /usr/local/bin ]]; then
             sudo mkdir -p /usr/local/bin
         fi
         sudo cp -v bitcoin-$VERSION_NUM/bin/bitcoin* /usr/local/bin/.
     fi
 
-    if [ $? == 0 ]; then
+    if [[ $? == 0 ]]; then
         fprint_s "Bitcoin Core $VERSION_NUM successfully installed!"
         touch .installed
     else
@@ -214,11 +214,11 @@ install_bitcoin_core () {
 
 init_bitcoin_core_config () {
 
-    if [ ! -d "$BITCOIN_DIR" ]; then
+    if [[ ! -d "$BITCOIN_DIR" ]]; then
         mkdir "$BITCOIN_DIR"
     fi
 
-    if [ ! -e "$BITCOIN_CONFIG" ]; then
+    if [[ ! -e "$BITCOIN_CONFIG" ]]; then
         fprint_i "Initializing Bitcoin Core config at $BITCOIN_CONFIG"
         echo "prune=2048" > "$BITCOIN_CONFIG"
         echo "maxconnections=50" >> "$BITCOIN_CONFIG"
@@ -227,17 +227,17 @@ init_bitcoin_core_config () {
         echo "rpcpassword=$(openssl rand -base64 32 | tr = x)" >> "$BITCOIN_CONFIG"
     fi
 
-    if [ $? == 0 ]; then
+    if [[ $? == 0 ]]; then
         fprint_i "Configuring ENV vars at $SHRC"
-        if [ -z "$BITCOIN_RPC_USER" ]; then
+        if [[ -z "$BITCOIN_RPC_USER" ]]; then
             echo 'export BITCOIN_RPC_USER=$(grep rpcuser "'"$BITCOIN_CONFIG"'" | cut -d "=" -f 2)' >> $SHRC
         fi
-        if [ -z "$BITCOIN_RPC_PASSWORD" ]; then
+        if [[ -z "$BITCOIN_RPC_PASSWORD" ]]; then
             echo 'export BITCOIN_RPC_PASSWORD=$(grep rpcpassword "'"$BITCOIN_CONFIG"'" | cut -d "=" -f 2)' >> $SHRC
         fi
     fi
 
-     if [ $(crontab -l | grep "@reboot bitcoind -daemon" >/dev/null 2>&1; echo $?) != 0 ]; then
+     if [[ $(crontab -l | grep "@reboot bitcoind -daemon" >/dev/null 2>&1; echo $?) != 0 ]]; then
         fprint_i "Configuring crontab to start bitcoind at boot (you may be prompted for password)"
         crontab -l > crontab_tmp
         echo "@reboot bitcoind -daemon" >> crontab_tmp
@@ -250,20 +250,20 @@ init_bitcoin_core_config () {
 
 }
 
-if [ -e .version ] && [ $(cat .version) != $VERSION_NUM ] && [ -d $VERSION_NUM_FULL ]; then
+if [[ -e .version ]] && [[ $(cat .version) != $VERSION_NUM ]] && [[ -d $VERSION_NUM_FULL ]]; then
     rm $VERSION_NUM_FULL/.installed >/dev/null 2>&1
 fi
 
-if [ -e $VERSION_NUM_FULL/.hash_verified ] &&
-   [ -e $VERSION_NUM_FULL/.sign_verified ] &&
-   [ -e $VERSION_NUM_FULL/.installed ]
+if [[ -e $VERSION_NUM_FULL/.hash_verified ]] &&
+   [[ -e $VERSION_NUM_FULL/.sign_verified ]] &&
+   [[ -e $VERSION_NUM_FULL/.installed ]
 then
         echo "Bitcoin Core $VERSION_NUM already installed"
         exit 0
 fi
 
-if [ ! -e $VERSION_NUM_FULL/.hash_verified ]; then download_bitcoin_core; fi
-if [ ! -e $VERSION_NUM_FULL/.sign_verified ]; then verify_bitcoin_core; fi
-if [ ! -e $VERSION_NUM_FULL/.installed ]; then install_bitcoin_core; fi
-if [ ! -e .config_init ]; then init_bitcoin_core_config; fi
-if [ ! $(is_bitcoin_core_running) == 0 ]; then start_bitcoin_core; fi
+if [[ ! -e $VERSION_NUM_FULL/.hash_verified ]]; then download_bitcoin_core; fi
+if [[ ! -e $VERSION_NUM_FULL/.sign_verified ]]; then verify_bitcoin_core; fi
+if [[ ! -e $VERSION_NUM_FULL/.installed ]]; then install_bitcoin_core; fi
+if [[ ! -e .config_init ]]; then init_bitcoin_core_config; fi
+if [[ ! $(is_bitcoin_core_running) == 0 ]]; then start_bitcoin_core; fi
