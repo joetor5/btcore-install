@@ -2,10 +2,10 @@
 # Copyright (c) 2024-2025 Joel Torres
 # Distributed under the MIT License. See the accompanying file LICENSE.
 
-VERSION=0.2.0
+SCRIPT_VERSION="0.2.0"
 
-if [[ $1 == "version" ]]; then
-    echo "Bitcoin Core Installer v$VERSION"
+if [[ "$1" =~ "--version"|"-v" ]]; then
+    echo $SCRIPT_VERSION
     exit 0
 fi
 
