@@ -11,19 +11,25 @@ Works on macOS and GNU/Linux systems.
 * GnuPG
 * OpenSSL
 
+## Install
+```
+curl -sSL https://raw.githubusercontent.com/joetor5/btcore-install/develop/install.sh | bash
+```
+
+This will install or update the btcore-install script.
+
 ## Usage
 
+To begin the Bitcoin Core installation, simply run:
+
 ```
-git clone https://github.com/joetor5/btcore-install.git
-cd btcore-install
-chmod +x install.sh
-./install.sh
+btcore-install
 ```
 
 The latest Bitcoin Core version will get installed by default. Optionally, a version number can be passed as an argument:
 
 ```
-./install.sh 28.1
+btcore-install 28.1
 ```
 
 ## License
