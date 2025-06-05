@@ -7,6 +7,9 @@ SCRIPT_VERSION="0.2.0"
 if [[ "$1" =~ "--version"|"-v" ]]; then
     echo $SCRIPT_VERSION
     exit 0
+elif [[ "$1" =~ "--update"|"-u" ]]; then
+    curl -sSL https://raw.githubusercontent.com/joetor5/btcore-install/develop/install.sh | bash
+    exit 0
 fi
 
 fprint_i() {
