@@ -24,6 +24,17 @@ setup_btcore_install_home () {
         exit_if_error "unable to create directories at $BTCORE_INSTALL_HOME"
     fi
 
+    shell_rc_files=(~/.zshrc ~/.bashrc)
+    for rc_file in "${shell_rc_files[@]}"
+    do
+        if [[ -f $rc_file ]]; then
+            if [[ $(cat $rc_file | grep "$BTCORE_INSTALL_NAME" >/dev/null 2>&1; echo $?) != 0 ]]; then
+                echo 'export PATH="$PATH:$HOME/.btcore-install/bin"' >> $rc_file
+            fi
+        fi
+    done
+
+
 }
 
 check_latest_btcore_install_version () {
