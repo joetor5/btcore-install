@@ -2,9 +2,16 @@
 # Copyright (c) 2025 Joel Torres
 # Distributed under the MIT License. See the accompanying file LICENSE.
 
+if [[ -n $1 && $1 == "dev" ]]; then
+    BTCORE_INSTALL_BRANCH="develop"
+else
+    BTCORE_INSTALL_BRANCH="main"
+fi
+
 BTCORE_INSTALL_NAME="btcore-install"
-BTCORE_INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/joetor5/btcore-install/develop/btcore-install.sh"
-BTCORE_INSTALL_VERSION_URL="https://raw.githubusercontent.com/joetor5/btcore-install/develop/.script_version"
+BTCORE_INSTALL_BASE_URL="https://raw.githubusercontent.com/joetor5/btcore-install"
+BTCORE_INSTALL_SCRIPT_URL="$BTCORE_INSTALL_BASE_URL/$BTCORE_INSTALL_BRANCH/btcore-install.sh"
+BTCORE_INSTALL_VERSION_URL="$BTCORE_INSTALL_BASE_URL/$BTCORE_INSTALL_BRANCH/.script_version"
 BTCORE_INSTALL_HOME="$HOME/.$BTCORE_INSTALL_NAME"
 BTCORE_INSTALL_BIN="$BTCORE_INSTALL_HOME/bin"
 BTCORE_INSTALL_SCRIPT="$BTCORE_INSTALL_BIN/$BTCORE_INSTALL_NAME"
@@ -40,7 +47,7 @@ setup_environment () {
 check_latest_version () {
 
     if [[ -f $BTCORE_INSTALL_SCRIPT ]]; then
-        echo "Checking for latest $BTCORE_INSTALL_NAME version..."
+        echo "Checking the latest $BTCORE_INSTALL_NAME version..."
         latest_version=$(curl -sSL $BTCORE_INSTALL_VERSION_URL)
         installed_version=$($BTCORE_INSTALL_SCRIPT -v)
         if [[ $latest_version == $installed_version  ]]; then
