@@ -16,12 +16,13 @@ exit_if_error () {
     fi
 }
 
-setup_btcore_install_home () {
+setup_environment () {
     
     if [[ ! -d "$BTCORE_INSTALL_HOME" ]]; then
-        echo "Setting up $BTCORE_INSTALL_NAME home..."
+        echo "Setting up $BTCORE_INSTALL_NAME directories..."
         mkdir -p $BTCORE_INSTALL_BIN
         exit_if_error "unable to create directories at $BTCORE_INSTALL_HOME"
+        touch $BTCORE_INSTALL_HOME/.first-install
     fi
 
     shell_rc_files=(~/.zshrc ~/.bashrc)
@@ -29,17 +30,17 @@ setup_btcore_install_home () {
     do
         if [[ -f $rc_file ]]; then
             if [[ $(cat $rc_file | grep "$BTCORE_INSTALL_NAME" >/dev/null 2>&1; echo $?) != 0 ]]; then
+                echo "Adding $BTCORE_INSTALL_NAME to PATH on $rc_file"
                 echo 'export PATH="$PATH:$HOME/.btcore-install/bin"' >> $rc_file
             fi
         fi
     done
-
-
 }
 
-check_latest_btcore_install_version () {
+check_latest_version () {
 
     if [[ -f $BTCORE_INSTALL_SCRIPT ]]; then
+        echo "Checking for latest $BTCORE_INSTALL_NAME version..."
         latest_version=$(curl -sSL $BTCORE_INSTALL_VERSION_URL)
         installed_version=$($BTCORE_INSTALL_SCRIPT -v)
         if [[ $latest_version == $installed_version  ]]; then
@@ -49,21 +50,27 @@ check_latest_btcore_install_version () {
     fi
 }
 
-download_btcore_install () {
+download_install () {
 
     echo "Downloading and installing $BTCORE_INSTALL_NAME..."
     curl -sSL -o $BTCORE_INSTALL_NAME --output-dir $BTCORE_INSTALL_BIN $BTCORE_INSTALL_SCRIPT_URL && \
     chmod +x $BTCORE_INSTALL_BIN/$BTCORE_INSTALL_NAME
     exit_if_error "unable to install $BTCORE_INSTALL_NAME"
     
-    echo -e "\033[32;1mSuccess!\033[0m"
+    success_msg="Success!"
+    if [[ -f $BTCORE_INSTALL_HOME/.first-install ]]; then
+        success_msg="$success_msg Restart your terminal to start using."
+        rm $BTCORE_INSTALL_HOME/.first-install
+    fi
+
+    echo -e "\033[32;1m$success_msg\033[0m"
 }
 
 
 install () {
-    setup_btcore_install_home
-    check_latest_btcore_install_version
-    download_btcore_install
+    setup_environment
+    check_latest_version
+    download_install
 }
 
 install
