@@ -2,10 +2,12 @@
 # Copyright (c) 2025 Joel Torres
 # Distributed under the MIT License. See the accompanying file LICENSE.
 
-if [[ -n $1 && $1 == "dev" ]]; then
-    BTCORE_INSTALL_BRANCH="develop"
-else
-    BTCORE_INSTALL_BRANCH="main"
+BTCORE_INSTALL_BRANCH="main"
+
+if [[ -n $1 ]]; then
+    if [[ $1 == "develop" || $1 == "main" ]]; then
+        BTCORE_INSTALL_BRANCH=$1
+    fi
 fi
 
 BTCORE_INSTALL_NAME="btcore-install"
@@ -26,22 +28,25 @@ exit_if_error () {
 setup_environment () {
     
     if [[ ! -d "$BTCORE_INSTALL_HOME" ]]; then
-        echo "Setting up $BTCORE_INSTALL_NAME directories..."
+        echo "Setting up $BTCORE_INSTALL_NAME environment..."
         mkdir -p $BTCORE_INSTALL_BIN
         exit_if_error "unable to create directories at $BTCORE_INSTALL_HOME"
-        touch $BTCORE_INSTALL_HOME/.first-install
-    fi
 
-    shell_rc_files=(~/.zshrc ~/.bashrc)
-    for rc_file in "${shell_rc_files[@]}"
-    do
-        if [[ -f $rc_file ]]; then
-            if [[ $(cat $rc_file | grep "$BTCORE_INSTALL_NAME" >/dev/null 2>&1; echo $?) != 0 ]]; then
-                echo "Adding $BTCORE_INSTALL_NAME to PATH on $rc_file"
-                echo 'export PATH="$PATH:$HOME/.btcore-install/bin"' >> $rc_file
+        shell_rc_files=(~/.zshrc ~/.bashrc)
+        for rc_file in "${shell_rc_files[@]}"
+        do
+            if [[ -f $rc_file ]]; then
+                if [[ $(cat $rc_file | grep $BTCORE_INSTALL_NAME >/dev/null 2>&1; echo $?) != 0 ]]; then
+                    echo 'if [[ -f $HOME/.btcore-install/.env ]]; then source $HOME/.btcore-install/.env; fi' >> $rc_file
+                fi
             fi
-        fi
-    done
+        done
+
+        echo $BTCORE_INSTALL_BRANCH > $BTCORE_INSTALL_HOME/.branch
+        echo 'export PATH="$PATH:$HOME/.btcore-install/bin"' > $BTCORE_INSTALL_HOME/.env
+        touch $BTCORE_INSTALL_HOME/.first-install
+
+    fi
 }
 
 check_latest_version () {
