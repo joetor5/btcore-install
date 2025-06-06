@@ -11,9 +11,10 @@ if [[ -n $1 ]]; then
 fi
 
 BTCORE_INSTALL_NAME="btcore-install"
-BTCORE_INSTALL_BASE_URL="https://raw.githubusercontent.com/joetor5/btcore-install"
-BTCORE_INSTALL_SCRIPT_URL="$BTCORE_INSTALL_BASE_URL/$BTCORE_INSTALL_BRANCH/btcore-install.sh"
-BTCORE_INSTALL_VERSION_URL="$BTCORE_INSTALL_BASE_URL/$BTCORE_INSTALL_BRANCH/.script_version"
+BTCORE_INSTALL_BASE_URL="https://raw.githubusercontent.com/joetor5/btcore-install/$BTCORE_INSTALL_BRANCH"
+BTCORE_INSTALL_SCRIPT_URL="$BTCORE_INSTALL_BASE_URL/btcore-install.sh"
+BTCORE_INSTALL_VERSION_URL="$BTCORE_INSTALL_BASE_URL/.script_version"
+BTCORE_INSTALL_LICENSE_URL="$BTCORE_INSTALL_BASE_URL/LICENSE"
 BTCORE_INSTALL_HOME="$HOME/.$BTCORE_INSTALL_NAME"
 BTCORE_INSTALL_BIN="$BTCORE_INSTALL_HOME/bin"
 BTCORE_INSTALL_SCRIPT="$BTCORE_INSTALL_BIN/$BTCORE_INSTALL_NAME"
@@ -62,13 +63,27 @@ check_latest_version () {
     fi
 }
 
-download_install () {
+download_license () {
 
-    echo "Downloading and installing $BTCORE_INSTALL_NAME..."
+    curl -sSl -O --output-dir $BTCORE_INSTALL_HOME $BTCORE_INSTALL_LICENSE_URL
+    exit_if_error "unable to download LICENSE file"
+
+}
+
+download_script () {
+
     curl -sSL -o $BTCORE_INSTALL_NAME --output-dir $BTCORE_INSTALL_BIN $BTCORE_INSTALL_SCRIPT_URL && \
     chmod +x $BTCORE_INSTALL_BIN/$BTCORE_INSTALL_NAME
     exit_if_error "unable to install $BTCORE_INSTALL_NAME"
-    
+
+}
+
+download_install () {
+
+    echo "Downloading and installing $BTCORE_INSTALL_NAME..."
+    download_license
+    download_script
+
     success_msg="Success!"
     if [[ -f $BTCORE_INSTALL_HOME/.first-install ]]; then
         success_msg="$success_msg Restart your terminal to start using."
