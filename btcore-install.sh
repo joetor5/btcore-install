@@ -9,7 +9,7 @@ if [[ "$1" =~ "--version"|"-v" ]]; then
     exit 0
 elif [[ "$1" =~ "--update"|"-u" ]]; then
     branch=$(cat $HOME/.btcore-install/.branch)
-    curl -sSL https://raw.githubusercontent.com/joetor5/btcore-install/develop/install.sh | bash -s $branch
+    curl -sSL https://raw.githubusercontent.com/joetor5/btcore-install/main/install.sh | bash -s $branch
     exit 0
 fi
 
@@ -52,6 +52,10 @@ do
     fi
 done
 
+SETUP_DIR="$HOME/.btcore-install/.setup"
+if [[ ! -d $SETUP_DIR ]]; then
+    mkdir $SETUP_DIR
+fi
 BITCOIN_CONFIG="$BITCOIN_DIR/bitcoin.conf"
 BITCOIN_CORE_URL="https://bitcoincore.org"
 BIN_URL="$BITCOIN_CORE_URL/bin"
@@ -254,20 +258,28 @@ init_bitcoin_core_config () {
 
 }
 
-if [[ -e .version ]] && [[ $(cat .version) != $VERSION_NUM ]] && [[ -d $VERSION_NUM_FULL ]]; then
-    rm $VERSION_NUM_FULL/.installed >/dev/null 2>&1
-fi
+install () {
 
-if [[ -e $VERSION_NUM_FULL/.hash_verified ]] &&
-   [[ -e $VERSION_NUM_FULL/.sign_verified ]] &&
-   [[ -e $VERSION_NUM_FULL/.installed ]]
-then
-        echo "Bitcoin Core $VERSION_NUM already installed"
-        exit 0
-fi
+    cd $SETUP_DIR
 
-if [[ ! -e $VERSION_NUM_FULL/.hash_verified ]]; then download_bitcoin_core; fi
-if [[ ! -e $VERSION_NUM_FULL/.sign_verified ]]; then verify_bitcoin_core; fi
-if [[ ! -e $VERSION_NUM_FULL/.installed ]]; then install_bitcoin_core; fi
-if [[ ! -e .config_init ]]; then init_bitcoin_core_config; fi
-if [[ ! $(is_bitcoin_core_running) == 0 ]]; then start_bitcoin_core; fi
+    if [[ -e .version ]] && [[ $(cat .version) != $VERSION_NUM ]] && [[ -d $VERSION_NUM_FULL ]]; then
+        rm $VERSION_NUM_FULL/.installed >/dev/null 2>&1
+    fi
+
+    if [[ -e $VERSION_NUM_FULL/.hash_verified ]] &&
+       [[ -e $VERSION_NUM_FULL/.sign_verified ]] &&
+       [[ -e $VERSION_NUM_FULL/.installed ]]
+    then
+            echo "Bitcoin Core $VERSION_NUM already installed"
+            exit 0
+    fi
+
+    if [[ ! -e $VERSION_NUM_FULL/.hash_verified ]]; then download_bitcoin_core; fi
+    if [[ ! -e $VERSION_NUM_FULL/.sign_verified ]]; then verify_bitcoin_core; fi
+    if [[ ! -e $VERSION_NUM_FULL/.installed ]]; then install_bitcoin_core; fi
+    if [[ ! -e .config_init ]]; then init_bitcoin_core_config; fi
+    if [[ ! $(is_bitcoin_core_running) == 0 ]]; then start_bitcoin_core; fi
+
+}
+
+install
