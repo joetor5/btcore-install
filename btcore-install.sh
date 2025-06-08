@@ -9,7 +9,7 @@ if [[ "$1" =~ "--version"|"-v" ]]; then
     exit 0
 elif [[ "$1" =~ "--update"|"-u" ]]; then
     branch=$(cat $HOME/.btcore-install/.branch)
-    curl -sSL https://raw.githubusercontent.com/joetor5/btcore-install/main/install.sh | bash -s $branch
+    curl -sSL https://raw.githubusercontent.com/joetor5/btcore-install/main/install/install.sh | bash -s $branch
     exit 0
 fi
 

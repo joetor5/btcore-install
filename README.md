@@ -13,7 +13,7 @@ Works on macOS and GNU/Linux systems.
 
 ## Install
 ```
-curl -sSL https://raw.githubusercontent.com/joetor5/btcore-install/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/joetor5/btcore-install/main/install/install.sh | bash
 ```
 
 This will install or update the btcore-install script.
