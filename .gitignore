@@ -2,3 +2,5 @@ bitcoin-*
 guix.sigs
 .config_init
 .version
+.DS_Store
+

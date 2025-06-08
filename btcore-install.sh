@@ -52,7 +52,9 @@ do
     fi
 done
 
-SETUP_DIR="$HOME/.btcore-install/.setup"
+INSTALL_HOME="$HOME/.btcore-install"
+ENV_FILE="$INSTALL_HOME/.env"
+SETUP_DIR="$INSTALL_HOME/.setup"
 if [[ ! -d $SETUP_DIR ]]; then
     mkdir $SETUP_DIR
 fi
@@ -237,13 +239,11 @@ init_bitcoin_core_config () {
     fi
 
     if [[ $? == 0 ]]; then
-        fprint_i "Configuring ENV vars at $SHRC"
-        if [[ -z "$BITCOIN_RPC_USER" ]]; then
-            echo 'export BITCOIN_RPC_USER=$(grep rpcuser "'"$BITCOIN_CONFIG"'" | cut -d "=" -f 2)' >> $SHRC
-        fi
-        if [[ -z "$BITCOIN_RPC_PASSWORD" ]]; then
-            echo 'export BITCOIN_RPC_PASSWORD=$(grep rpcpassword "'"$BITCOIN_CONFIG"'" | cut -d "=" -f 2)' >> $SHRC
-        fi
+        fprint_i "Configuring RPC env vars at $ENV_FILE"
+        echo 'if [[ -f "'"$BITCOIN_CONFIG"'" ]]; then' >> $ENV_FILE
+        echo '    export BITCOIN_RPC_USER=$(grep rpcuser "'"$BITCOIN_CONFIG"'" | cut -d "=" -f 2)' >> $ENV_FILE
+        echo '    export BITCOIN_RPC_PASSWORD=$(grep rpcpassword "'"$BITCOIN_CONFIG"'" | cut -d "=" -f 2)' >> $ENV_FILE
+        echo 'fi' >> $ENV_FILE
     fi
 
      if [[ $(crontab -l | grep "@reboot bitcoind -daemon" >/dev/null 2>&1; echo $?) != 0 ]]; then
